@@ -1,4 +1,5 @@
 input/*
 !input/embeddings/README.MD
 !input/README.MD
-
+clean_data/*
+!clean_data/README.MD
