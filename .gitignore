@@ -1,5 +1,4 @@
-embedding_model/*
-raw_data/*
-!embedding_model/README.MD
-!raw_data/README.MD
+input/*
+!input/embeddings/README.MD
+!input/README.MD
 

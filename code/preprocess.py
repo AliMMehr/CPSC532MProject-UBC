@@ -15,13 +15,13 @@ punctuations= ["\"","(",")","*",",","-","_",".","~","%","^","&","!","#",'@'
 
 def load_data(filename):
 
-    data = pd.read_csv('../raw_data/%s' % filename  #, encoding='ISO-8859-1'
+    data = pd.read_csv('../input/%s' % filename  #, encoding='ISO-8859-1'
                         , engine="python")
 
     return data
 
 def load_google_vector():
-    model = gensim.models.KeyedVectors.load_word2vec_format('../model/GoogleNews-vectors-negative300.bin', binary=True)
+    model = gensim.models.KeyedVectors.load_word2vec_format('../input/embeddings/GoogleNews-vectors-negative300.bin', binary=True)
     return model
 
 def tweet2v(list_words, model):

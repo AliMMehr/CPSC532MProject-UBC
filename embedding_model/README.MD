@@ -1,1 +1,0 @@
-Embedding models are here. This folder is untracked.
