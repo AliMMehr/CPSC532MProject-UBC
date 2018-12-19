@@ -1,6 +1,7 @@
 # This Python 3 environment comes with many helpful analytics libraries installed
 # It is defined by the kaggle/python docker image: https://github.com/kaggle/docker-python
 # For example, here's several helpful packages to load in 
+print('start1')
 
 import numpy as np # linear algebra
 import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
@@ -12,6 +13,8 @@ from textblob import TextBlob
 import multiprocessing
 from multiprocessing import Process
 import json
+import urllib
+import bz2
 
 # Input data files are available in the "../input/" directory.
 # For example, running this (by clicking run or pressing Shift+Enter) will list the files in the input directory
@@ -44,7 +47,20 @@ def load_data(filename):
 
 def load_google_vector():
     model = gensim.models.KeyedVectors.load_word2vec_format(
-        '../input/embeddings/GoogleNews-vectors-negative300/GoogleNews-vectors-negative300.bin.gz',binary=True)
+        '../../../../aryara/GoogleNews-vectors-negative300.bin.gz',binary=True)
+    return model
+
+def load_google_vector2():
+    url="https://s3.amazonaws.com/dl4j-distribution/GoogleNews-vectors-negative300.bin.gz"
+
+    model = gensim.models.KeyedVectors.load_word2vec_format(
+        url,binary=True)
+    return model
+
+def download_google_vector():
+    url="https://s3.amazonaws.com/dl4j-distribution/GoogleNews-vectors-negative300.bin.gz"
+    file=urllib.request.urlopen('https://s3.amazonaws.com/dl4j-distribution/GoogleNews-vectors-negative300.bin.gz')
+    model = gensim.models.KeyedVectors.BaseKeyedVectors.load(file)
     return model
 
 def tweet2v(list_words, model):
@@ -100,8 +116,9 @@ def batch_of_items2json_files(q_batch,model,batch_number,run_id):
         #print(qfeatures)
         batch_clean_data[qid]={'qfeatures':qfeatures,'target':target}
     
-    with open('../clean_data/%s-%s.json' % (run_id,batch_number), 'w') as fp:
-        json.dump(batch_clean_data, fp)
+    with open('../clean_data/%s-%s.json.tar.bz2' % (run_id,batch_number), 'wb') as fp:
+        s=json.dumps(batch_clean_data)
+        fp.write(bz2.compress(s.encode()))
         print('Done batch %s'% batch_number)
 
 #punctuations
@@ -168,7 +185,7 @@ def poscount(tweet_text):
     return poscount.values()
 
 def store_features_for_data(model,data,run_id):
-    batch_size=3
+    batch_size=10000
     
     def chunker(seq, size):
         return (seq[pos:pos + size] for pos in range(0, len(seq), size))
@@ -177,12 +194,12 @@ def store_features_for_data(model,data,run_id):
     i=0
     processes=[]
     for batch in chunker(data,batch_size):
-        batch_of_items2json_files(batch,model,i,run_id)
-        #p=Process(target=batch_of_items2json_iles,args=(batch,model,i,run_id))
-        #p.start()
-        #processes.append(p)
-        if i>2:
-            break
+        if i<30:    
+            #batch_of_items2json_files(batch,model,i,run_id)
+            p=Process(target=batch_of_items2json_files,args=(batch,model,i,run_id))
+            p.start()
+            processes.append(p)
+        
         i+=1
     for p in processes:
         p.join()
@@ -191,13 +208,14 @@ def load_test_data():
     pass
 
 
+
+print('start')
+model = load_google_vector()
+print("load_google_vector loaded!")
+
 data =load_data('train.csv')
 print(data.columns)
 print(data.head())
-print(data.describe())
 
-
-model = load_google_vector()
-print("load_google_vector loaded!")
 
 store_features_for_data(model,data,'ali')
