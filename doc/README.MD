@@ -1,3 +1,1 @@
-Hi There,
-
-This is our CPSC Project!
+The result of running the model on test data will be stored here.

@@ -1,3 +1,1 @@
-Hi There,
-
-This is our CPSC Project!
+Embedding models are here. This folder is untracked.

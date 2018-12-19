@@ -1,3 +1,1 @@
-Hi There,
-
-This is our CPSC Project!
+This directory has the embeddings of each sentence.

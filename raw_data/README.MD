@@ -1,3 +1,1 @@
-Hi There,
-
-This is our CPSC Project!
+Raw data are here. This folder is untracked.
