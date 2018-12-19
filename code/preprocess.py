@@ -13,16 +13,12 @@ punctuations= ["\"","(",")","*",",","-","_",".","~","%","^","&","!","#",'@'
                "=","\'","\\","+","/",":","[","]","«","»","،","؛","?",".","…","$",
                "|","{","}","٫",";",">","<","1","2","3","4","5","6","7","8","9","0"]
 
-def load_data(address):
+def load_data(filename):
 
-    train = pd.read_csv('address',encoding='ISO-8859-1')
+    data = pd.read_csv('../raw_data/%s' % filename  #, encoding='ISO-8859-1'
+                        , engine="python")
 
-    ## Split into val and train set
-    X_valid, Y_valid = X_train[-2000:], Y_train[-2000:]
-    X_train, Y_train = X_train[:-2000], Y_train[:-2000]
-    n=len(Y_train)
-
-    return X_train,Y_train,X_valid,Y_valid
+    return data
 
 def load_google_vector():
     model = gensim.models.KeyedVectors.load_word2vec_format('../model/GoogleNews-vectors-negative300.bin', binary=True)
@@ -51,21 +47,22 @@ def tweets2tokens(tweet_text,model):
                 words.append(token)
     return tokens,url
 
-def tweet2features(tweet_text,model):
+def tweet2features(q_batch,model):
+
 
     tokens,url=tweets2tokens(tweet_text,model)
 
     features=(tweet2v(tokens,model)).tolist()
-    list=punctuationanalysis(tweet_text)
-    for item in list:
+    list1=punctuationanalysis(tweet_text)
+    for item in list1:
         features.append(item)
     features.append(negativewordcount(tokens))
     features.append(positivewordcount(tokens))
     features.append(capitalratio(tweet_text))
     features.append(contentlength(tokens))
     features.append(sentimentscore(tweet_text))
-    list=poscount(tweet_text)
-    for item in list:
+    list1=poscount(tweet_text)
+    for item in list1:
         features.append(item)
     features.append(url)
     # print("features",features)
@@ -76,15 +73,13 @@ def punctuationanalysis(tweet_text):
     hasqmark =sum(c =='?' for c in tweet_text)
     hasemark =sum(c =='!' for c in tweet_text)
     hasperiod=sum(c =='.' for c in tweet_text)
+    hasstar=sum(c =='*' for c in tweet_text)
     number_punct=sum(c in punctuations for c in tweet_text)
-    return hasqmark,hasemark,hasperiod,number_punct
+    return hasqmark,hasemark,hasperiod,hasstar,number_punct
 
 def negativewordcount(tokens):
     count = 0
-    negativeFeel = ['tired', 'sick', 'bord', 'uninterested', 'nervous', 'stressed',
-                     'afraid', 'scared', 'frightened', 'boring','bad',
-                     'distress', 'uneasy', 'angry', 'annoyed', 'pissed',"hate",
-                     'sad', 'bitter', 'down', 'depressed', 'unhappy','heartbroken','jealous']
+    negativeFeel = ['dick','penis','god']
     for negative in negativeFeel:
         if negative in tokens:
             count += 1
@@ -92,10 +87,7 @@ def negativewordcount(tokens):
 
 def positivewordcount(tokens):
     count = 0
-    positivewords = ['joy', ' happy', 'hope', 'kind', 'surprise'
-                     , 'excite', ' interest', 'admire',"delight","yummy",
-                     'confidenc', 'good', 'satisf', 'pleasant',
-                     'proud', 'amus', 'amazing', 'awesome',"love","passion","great","like","wow","delicious"]
+    positivewords = []
     for pos in positivewords:
         if pos in tokens:
             count += 1
@@ -146,7 +138,6 @@ def main():
     model = load_google_vector()
     print("Vectors are loaded!")
 
-    tweet_vectors_train= np.zeros((len(y_train),315))
     i=0
     for tweet_text in x_train:
         tweet_vectors_train[i,:]=tweet2features(tweet_text,model)
@@ -163,15 +154,26 @@ def main():
     return tweet_vectors_train,y_train ,tweet_vectors_test,y_test
 
 def load_train_data():
-    
+    data =load_data()
+
+    model = load_google_vector()
+    print("Vectors are loaded!")
+
+    for tweet_text in x_train:
+        tweet_vectors_train[i,:]=tweet2features(tweet_text,model)
+        i+=1
+
+    processes=[]
+    for event in events:
+        p=Process(target=pheme_to_csv,args=(event,))
+        p.start()
+        processes.append(p)
+    for p in processes:
+        p.join()
 
 def load_test_data():
-    
+    pass
 
-X_train, Y_train, X_test,Y_test= main()
-
-
-np.save("f_trainx",X_train)
-np.save("f_trainy",Y_train)
-np.save("f_testx",X_test)
-np.save("f_testy",Y_test)
+data =load_data('sample_submission.csv')
+print(data.head())
+print(data.description())
